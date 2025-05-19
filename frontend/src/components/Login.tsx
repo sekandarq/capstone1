@@ -15,7 +15,7 @@ function Login({ onLogin }: LoginProps) {
       onLogin('teacher'); // Call onLogin with 'teacher' role
     } else if (email === 'iskandar@student.com' && password === 'password') {
       onLogin('student'); // Call onLogin with 'student' role
-    } else {
+    } else { 
       alert('Invalid credentials');
     }
   };
