@@ -19,8 +19,23 @@ function StudentDashboard({ mockStudents, onLogout }: StudentDashboardProps) {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-red-800 border-r">
+      <aside className="w-64 bg-white dark:bg-red-800 border-r p-4">
         {/* Sidebar content */}
+        <div className="p-4">
+          <h2 className="text-lg font-semibold text-white">Student Dashboard</h2>
+          <ul className="mt-4">
+            <li className="mb-2">
+              <button className="w-full text-left px-4 py-2 rounded-md bg-blue-500 text-white">
+                Profile
+              </button>
+            </li>
+            <li className="mb-2">
+              <button className="w-full text-left px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800">
+                Face Registration
+              </button>
+            </li>
+          </ul>
+        </div>
       </aside>
 
       {/* Main Area */}
@@ -31,46 +46,19 @@ function StudentDashboard({ mockStudents, onLogout }: StudentDashboardProps) {
           </button>
         </div>
         {/* Attendance Overview */}
-        <div className="bg-white dark:bg-white shadow rounded-lg p-4 mb-4">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">Attendance Overview</h2>
-          {/* Attendance Overview content */}
-        </div>
-
-        {/* Upcoming Classes Table */}
-        <div className="bg-white dark:bg-white shadow rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-2">Upcoming Classes</h2>
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Subject</th>
-                <th>Lecturer</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="bg-slate-50 dark:bg-slate-700">
-                <td>05/19/2025</td>
-                <td>Math</td>
-                <td>Dr. Smith</td>
-              </tr>
-              <tr>
-                <td>05/20/2025</td>
-                <td>Science</td>
-                <td>Mr. Jones</td>
-              </tr>
-              {/* Add more rows */}
-            </tbody>
-          </table>
+        <div className="bg-white dark:bg-white shadow rounded-lg p-4 mb-8">
+          <h2 className="text-2xl text-center font-bold tracking-tight mb-8">Student's Profile</h2>
+          {/* Student Information */}
+          <div>
+            <p>Name: {mockStudents[0].name}</p>
+            <p>Student ID: {mockStudents[0].studentId}</p>
+            <p>Department: {mockStudents[0].department}</p>
+            <p>Email: {mockStudents[0].email}</p>
+          </div>
         </div>
 
         {/* Student Information */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Student Information</h2>
-          <p>Name: {mockStudents[0].name}</p>
-          <p>Student ID: {mockStudents[0].studentId}</p>
-          <p>Department: {mockStudents[0].department}</p>
-          <p>Email: {mockStudents[0].email}</p>
-        </div>
+
       </div>
     </div>
   );
