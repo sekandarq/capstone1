@@ -1,60 +1,98 @@
-// src/pages/Login.tsx
+// src/components/Login.tsx
 import React, { useState } from 'react';
-//import type { string } from '../App'; // Import userRole type
+import { useNavigate } from 'react-router-dom';
+import { IoLogIn } from "react-icons/io5";
+import type { Student } from '../types';
 
 interface LoginProps {
-  onLogin: (role: string) => void; // Accepts 'student' or 'teacher'
+  onLogin: (role: string) => void;
 }
 
-function Login({ onLogin }: LoginProps) {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleLoginClick = () => {
-    if (email === 'seonyoung@teacher.com' && password === 'password') {
-      onLogin('teacher'); // Call onLogin with 'teacher' role
-    } else if (email === 'iskandar@student.com' && password === 'password') {
-      onLogin('student'); // Call onLogin with 'student' role
-    } else { 
-      alert('Invalid credentials');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Teacher mock credentials
+    const teacherAccount = { email: 'seonyeong@khu.ac.kr', password: 'password' };
+    if (email === teacherAccount.email && password === teacherAccount.password) {
+      onLogin('teacher');
+      navigate('/teacher');
+      return;
+    }
+
+    // Fetch registered students fresh
+    try {
+      const res = await fetch('http://localhost:4000/students');
+      const students: Student[] = await res.json();
+      const registered = students.find(s => s.email === email && s.password === password);
+      if (registered) {
+        localStorage.setItem('currentStudent', JSON.stringify(registered));
+        onLogin('student');
+        navigate('/student');
+      } else {
+        alert('Invalid credentials');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Login failed');
     }
   };
 
+  const handleRegisterNav = () => {
+    navigate('/register');
+  };
+
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="max-w-md bg-white dark:bg-red-800 p-8 shadow-lg rounded-xl">
-        <div className="flex items-center justify-center mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-blue-500 bg-blue-100 rounded-full flex items-center justify-center" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-11m0 0l4 11H18m-6 0H6" />
-          </svg>
+    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-red-400 via-white to-blue-400">
+      <form onSubmit={handleLogin} className="w-full max-w-sm bg-white shadow p-6 rounded-lg">
+        <div className="flex justify-center mb-4">
+          <IoLogIn className="text-5xl text-blue-500" />
         </div>
-        <h1 className="text-3xl text-white text-center font-bold mb-4">Welcome Back !</h1>
-        <p className="text-black text-xl text-center mb-6">Log in with your credentials</p>
-        <div>
+        <h2 className="text-2xl text-center font-bold mb-4">Login</h2>
+        <p className="text-center text-gray-600 mb-4">Please enter your credentials</p>
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email:</label>
           <input
+            id="email"
             type="email"
-            placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
           />
         </div>
-        <div className="mt-4">
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-gray-700 font-bold mb-2">Password:</label>
           <input
+            id="password"
             type="password"
-            placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
           />
         </div>
-        <button className="bg-blue-500 hover:bg-blue-800 text-white font-medium py-2 rounded-md mt-4 w-full" onClick={handleLoginClick}>
-          Login
-        </button>
-        <p className="text-black-500 text-center mt-4">(seonyoung@teacher.com / password, iskandar@student.com / password)</p>
-      </div>
+        <div className="flex justify-between">
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            onClick={handleRegisterNav}
+            className="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
+          >
+            Register
+          </button>
+        </div>
+      </form>
     </div>
   );
-}
+};
 
 export default Login;

@@ -1,11 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Global Styles */
-body {
-  background-color: #f3f0f0; 
-  color: #0a0a0a; 
+
+html, body, #root, .app {
+  height: 100%;
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
 }
 
 .dark-mode {

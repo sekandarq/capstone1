@@ -1,67 +1,109 @@
-import React from 'react';
-import App from '../App'; // Import App to access mockStudents
-
-interface Student {
-  id: number;
-  name: string;
-  studentId: string;
-  department: string;
-  email: string;
-}
+// src/components/StudentDashboard.tsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { Student } from '../types';
 
 interface StudentDashboardProps {
-  mockStudents: Student[];
   onLogout: () => void;
 }
 
-function StudentDashboard({ mockStudents, onLogout }: StudentDashboardProps) {
+const StudentDashboard: React.FC<StudentDashboardProps> = ({
+  onLogout
+}) => {
+  // 'profile' shows the profile view; 'face' shows the face-registration view
+  const [activeSection, setActiveSection] = useState<'profile' | 'face'>('profile');
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const stored = localStorage.getItem('currentStudent');
+    if (stored) {
+      setCurrentStudent(JSON.parse(stored));
+    }
+  }, []);
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-red-800 border-r p-4">
-        {/* Sidebar content */}
-        <div className="p-4">
-          <h2 className="text-lg font-semibold text-white">Student Dashboard</h2>
-          <ul className="mt-4">
-            <li className="mb-2">
-              <button className="w-full text-left px-4 py-2 rounded-md bg-blue-500 text-white">
-                Profile
-              </button>
-            </li>
-            <li className="mb-2">
-              <button className="w-full text-left px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800">
-                Face Registration
-              </button>
-            </li>
-          </ul>
-        </div>
+      <aside className="text-white w-64 bg-white dark:bg-red-800 border-r p-4">
+        <h2 className="text-lg font-semibold text-white mb-4 border-b-2 border-white">
+          Dashboard
+        </h2>
+        <ul className="mt-2 space-y-1">
+          <li>
+            <button
+              onClick={() => setActiveSection('profile')}
+              className={`w-full text-left px-4 py-2 rounded-md transition
+                ${activeSection === 'profile'
+                  ? 'bg-blue-500 text-white'
+                  : 'hover:bg-gray-100 dark:hover:bg-slate-800'
+                }`}
+            >
+              Student Profile
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => setActiveSection('face')}
+              className={`w-full text-left px-4 py-2 rounded-md transition
+                ${activeSection === 'face'
+                  ? 'bg-blue-500 text-white'
+                  : 'hover:bg-gray-100 dark:hover:bg-slate-800'
+                }`}
+            >
+              Face Registration
+            </button>
+          </li>
+        </ul>
       </aside>
 
       {/* Main Area */}
-      <div className="flex-1 p-6">
-        <div className="flex justify-end">
-          <button onClick={onLogout} className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md mb-4">
+      <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+        {/* Logout */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => {
+              localStorage.removeItem('currentStudent');
+              onLogout();
+              navigate('/');
+            }}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
+          >
             Logout
           </button>
         </div>
-        {/* Attendance Overview */}
-        <div className="bg-white dark:bg-white shadow rounded-lg p-4 mb-8">
-          <h2 className="text-2xl text-center font-bold tracking-tight mb-8">Student's Profile</h2>
-          {/* Student Information */}
-          <div>
-            <p>Name: {mockStudents[0].name}</p>
-            <p>Student ID: {mockStudents[0].studentId}</p>
-            <p>Department: {mockStudents[0].department}</p>
-            <p>Email: {mockStudents[0].email}</p>
+
+        {/* Conditional Sections */}
+        {activeSection === 'profile' ? (
+          // ── Student Profile Section ─────────────────────────────────────
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="uppercase text-center text-2xl font-bold mb-4">Student’s Profile</h2>
+            <div className="space-y-2 text-gray-800">
+              <p><strong>Name:</strong> {currentStudent?.name}</p>
+              <p><strong>Student ID:</strong> {currentStudent?.studentId}</p>
+              <p><strong>Department:</strong> {currentStudent?.department}</p>
+              <p><strong>Email:</strong> {currentStudent?.email}</p>
+            </div>
           </div>
-        </div>
-
-        {/* Student Information */}
-
+        ) : (
+          // ── Face Registration Section ──────────────────────────────────
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="uppercase text-2xl font-bold mb-4">Face Registration</h2>
+            {/* Replace this with actual face-registration widget */}
+            <p className="text-gray-600 mb-4">
+              Here you can capture your face image, preview it, and submit to register.
+            </p>
+            <button
+              onClick={() => alert('Face capture flow goes here')}
+              className="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
+            >
+              Capture & Register Face
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default StudentDashboard;
