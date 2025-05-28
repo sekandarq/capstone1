@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:4000/classes')
+      fetch('/api/classes/')
       .then(res => res.json())
       .then((data: ClassItem[]) => {
         setClasses(data);
@@ -29,10 +29,10 @@ const Register: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetch('http://localhost:4000/students', {
+    fetch('/api/students/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, studentId, department, email, password, classId: selectedClassId })
+      body: JSON.stringify({ name, studentId, department, email, password, class_enrolled: selectedClassId })
     })
       .then(res => {
         if (!res.ok) throw new Error('Registration failed');

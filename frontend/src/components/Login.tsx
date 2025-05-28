@@ -25,9 +25,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     // Fetch registered students fresh
     try {
-      const res = await fetch('http://localhost:4000/students');
+      const res = await fetch(`/api/students/?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
       const students: Student[] = await res.json();
-      const registered = students.find(s => s.email === email && s.password === password);
+      const registered = (students.length > 0 ? students[0] : null);
       if (registered) {
         localStorage.setItem('currentStudent', JSON.stringify(registered));
         onLogin('student');

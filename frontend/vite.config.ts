@@ -7,10 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       // any request to /api/* will be forwarded to your json-server
-      '/api': {
-        target: 'http://localhost:4000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+      '/api/': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }
