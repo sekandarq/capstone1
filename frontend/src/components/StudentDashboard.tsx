@@ -1,4 +1,3 @@
-// src/components/StudentDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Student } from '../types';
@@ -7,10 +6,7 @@ interface StudentDashboardProps {
   onLogout: () => void;
 }
 
-const StudentDashboard: React.FC<StudentDashboardProps> = ({
-  onLogout
-}) => {
-  // 'profile' shows the profile view; 'face' shows the face-registration view
+const StudentDashboard: React.FC<StudentDashboardProps> = ({ onLogout }) => {
   const [activeSection, setActiveSection] = useState<'profile' | 'face'>('profile');
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [showWebcam, setShowWebcam] = useState(false);
@@ -34,11 +30,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <li>
             <button
               onClick={() => setActiveSection('profile')}
-              className={`w-full text-left px-4 py-2 rounded-md transition
-                ${activeSection === 'profile'
+              className={`w-full text-left px-4 py-2 rounded-md transition ${
+                activeSection === 'profile'
                   ? 'bg-blue-500 text-white'
                   : 'hover:bg-gray-100 dark:hover:bg-slate-800'
-                }`}
+              }`}
             >
               Student Profile
             </button>
@@ -46,11 +42,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <li>
             <button
               onClick={() => setActiveSection('face')}
-              className={`w-full text-left px-4 py-2 rounded-md transition
-                ${activeSection === 'face'
+              className={`w-full text-left px-4 py-2 rounded-md transition ${
+                activeSection === 'face'
                   ? 'bg-blue-500 text-white'
                   : 'hover:bg-gray-100 dark:hover:bg-slate-800'
-                }`}
+              }`}
             >
               Face Registration
             </button>
@@ -68,7 +64,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
               onLogout();
               navigate('/');
             }}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
+            className="bg-red-500 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md"
           >
             Logout
           </button>
@@ -76,7 +72,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
         {/* Conditional Sections */}
         {activeSection === 'profile' ? (
-          // ── Student Profile Section ─────────────────────────────────────
+          // ── Student Profile Section ─
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="uppercase text-center text-2xl font-bold mb-4">Student’s Profile</h2>
             <div className="space-y-2 text-gray-800">
@@ -129,7 +125,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       return;
                     }
 
-                    const res = await fetch("http://localhost:8001/register-face", {
+                    const res = await fetch('/api/face-recognition/register_face/', {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -145,10 +141,10 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   className="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
                 >
                   Capture & Register Face
-            </button>
-          </>
-        )}
-        </div>
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>
