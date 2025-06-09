@@ -125,7 +125,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onLogout }) => {
       {/* Main Area */}
       <div className="flex-1 p-6 bg-slate-100 overflow-auto">
         <div className="flex justify-between mb-6">
-          <button onClick={() => alert('Start face recognition attendance')}
+          <button onClick={async () => {
+              const res = await fetch('http://192.168.35.235:8000/start-face-recognition/', {
+                method: 'POST'
+              });
+              const data = await res.json();
+              alert(data.message);
+            }}
             className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-md"
             >
             Start Face Recognition

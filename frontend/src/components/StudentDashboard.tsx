@@ -103,47 +103,53 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onLogout }) => {
             )}
 
             {showWebcam && (
-              <>
-                <video id="video" width="320" height="240" autoPlay className="border mb-4" />
-                <button
-                  onClick={async () => {
-                    const video = document.getElementById("video") as HTMLVideoElement;
-                    const canvas = document.createElement("canvas");
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    const context = canvas.getContext("2d");
-                    if (!context) return;
+  <>
+    <video id="video" width="320" height="240" autoPlay className="border mb-4" />
+    <button
+      onClick={async () => {
+        const video = document.getElementById("video") as HTMLVideoElement;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return;
 
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const imageBase64 = canvas.toDataURL("image/jpeg");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageBase64 = canvas.toDataURL("image/jpeg");
 
-                    const studentId = currentStudent?.studentId;
-                    const name = currentStudent?.name;
+        const studentId = currentStudent?.studentId;
+        const name = currentStudent?.name;
 
-                    if (!studentId || !name) {
-                      alert("Missing student ID or name.");
-                      return;
-                    }
+        if (!studentId || !name) {
+          alert("Missing student ID or name.");
+          return;
+        }
 
-                    const res = await fetch('/api/face-recognition/register_face/', {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        student_id: studentId,
-                        name: name,
-                        image_base64: imageBase64,
-                      }),
-                    });
+        const PI_API_BASE_URL = "http://192.168.35.235:8000";  // FastAPI running port
+        const res = await fetch(`${PI_API_BASE_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_id: studentId,
+            name: name,
+            image_base64: imageBase64,
+          }),
+        });
 
-                    const data = await res.json();
-                    alert(data.message);
-                  }}
-                  className="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
-                >
-                  Capture & Register Face
-                </button>
-              </>
-            )}
+        const data = await res.json();
+        alert(data.message);
+
+        // 🧠 Stop webcam after submission
+        const stream = video.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        setShowWebcam(false);
+      }}
+      className="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
+    >
+      Capture & Register Face
+    </button>
+  </>
+)}
           </div>
         )}
       </div>
