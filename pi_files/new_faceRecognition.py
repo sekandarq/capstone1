@@ -1,4 +1,4 @@
-# Modified script to replace encodings.pickle with ChromaDB
+# new_faceRecognition.py
 import face_recognition
 import cv2
 import numpy as np
@@ -7,6 +7,23 @@ import time
 import math
 import mediapipe as mp
 import chromadb
+import argparse
+import requests
+from datetime import datetime
+
+# Parse command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("class_id", type=int)
+parser.add_argument("week",     type=int)
+parser.add_argument("session",  type=int)
+args = parser.parse_args()
+
+CLASS_ID = args.class_id
+WEEK     = args.week
+SESSION  = args.session
+
+print(f"[INFO] Running for class {CLASS_ID}, week {WEEK}, session {SESSION}")
+
 
 # Initialize ChromaDB and fetch known encodings
 client = chromadb.PersistentClient(path="./chroma_db")
@@ -15,6 +32,10 @@ print("[INFO] loading encodings from ChromaDB...")
 data = collection.get(include=["embeddings", "metadatas"]) # get the data neeeded from the collection
 known_face_encodings = data["embeddings"]
 known_face_names = [meta.get("name", "Unknown") for meta in data["metadatas"]]
+
+DJANGO_HOST = "http://192.168.35.166:8000/api" #laptop's IP
+
+attendance_marked = set()  # Set to track marked students
 
 # Mediapipe face mesh
 mp_face_mesh = mp.solutions.face_mesh
@@ -122,16 +143,24 @@ def process_frame(frame, frame_count):
         face_locations[:] = face_recognition.face_locations(rgb_resized)
         face_encodings[:] = face_recognition.face_encodings(rgb_resized, face_locations, model='small')
         face_names[:] = []
-
+    
+    face_ids = []
+    face_names = []
     for face_encoding in face_encodings:
-        name = "Unknown"
-        matches = collection.query(query_embeddings=[face_encoding.tolist()], n_results=1)
+        matches = collection.query(
+              query_embeddings=[face_encoding.tolist()],
+              n_results=1
+            )
+        # distances, ids, metadatas all come back as lists-of-lists
         if matches["distances"] and matches["distances"][0][0] < 0.5:
-            name = matches["metadatas"][0][0].get("name", "Unknown")
-        face_names.append(name)
+            sid   = matches["ids"][0][0]               # student_id
+            sname = matches["metadatas"][0][0].get("name", "Unknown")
+            face_ids.append(sid)
+            face_names.append(sname)
 
     blink_count, pitch, yaw = detect_blink_and_head_movement(rgb_resized)
-
+    
+    spoofing_flags.clear()
     for name in face_names:
         if name == "Unknown":
             spoofing_flags.append("unknown")
@@ -139,6 +168,39 @@ def process_frame(frame, frame_count):
             spoofing_flags.append("spoofing")
         else:
             spoofing_flags.append("real")
+            
+    for sid, name, status in zip(face_ids, face_names, spoofing_flags):
+        
+        if name != "Unknown" and status == "real" and sid not in attendance_marked:
+            # 1) build the payload
+            url = f"{DJANGO_HOST}/face-recognition/mark-attendance/"
+            timestamp = datetime.now().isoformat()
+            payload = {
+                "student_id":    sid,
+                "class_id": CLASS_ID,
+                "week":          WEEK,
+                "session":       SESSION,
+                "status":        "present",
+                "timestamp":     timestamp,
+                }
+
+            # debug
+            print(f"[DEBUG] Detected {name=} {status=}")
+            print("[DEBUG] POST to:", url)
+            print("[DEBUG] payload:", payload)
+            
+            # 2) fire the POST
+            try:
+                resp = requests.post(url, json=payload)
+                print("[DEBUG] response:", resp.status_code,resp.text)
+                if resp.ok:
+                    attendance_marked.add(name)
+                    attendance_marked.add(sid)
+                else:
+                    print(f"[WARN] could not mark {name}", resp.text)
+                    
+            except Exception as e:
+                print(f"[ERROR] Attendance API unreachable: {e}")
 
     return frame
 
@@ -166,6 +228,7 @@ def calculate_fps():
     return fps
 
 while True:
+    frame_count += 1
     frame = picam2.capture_array()
     processed_frame = process_frame(frame, frame_count)
     display_frame = draw_results(processed_frame)

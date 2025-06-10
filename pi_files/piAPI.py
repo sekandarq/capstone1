@@ -28,6 +28,11 @@ class FaceRegisterRequest(BaseModel):
     name: str
     image_base64: str
 
+class StartRecognitionPayload(BaseModel):
+    class_id: int
+    week: int
+    session: int
+
 @app.post("/register")
 async def register_face(data: FaceRegisterRequest):
     try:
@@ -62,9 +67,10 @@ async def register_face(data: FaceRegisterRequest):
         return {"status": "error", "message": f"Failed to register face: {str(e)}"}
 
 @app.post("/start-face-recognition/")
-def start_recognition():
+def start_recognition(payload: StartRecognitionPayload):
     try:
-        subprocess.Popen(["python3", "face_recognition_script.py"])
-        return {"status": "success", "message": "Face recognition started"}
+        subprocess.Popen(["python3", "/home/capstone-design/Desktop/Face Recognition/new_faceRecognition.py", str(payload.class_id), str(payload.week), str(payload.session)], cwd="/home/capstone-design/Desktop/Face Recognition")
+        print("[INFO] Spawned new_faceRecognition.py")
+        return {"status": "success", "message": f"Started recognition for class {payload.class_id}, week {payload.week}, session {payload.session}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}

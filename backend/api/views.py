@@ -1,8 +1,9 @@
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Class, Attendance, Student
-from .serializers import ClassSerializer, AttendanceSerializer, StudentSerializer
+from .models import Student, Attendance, Class as ClassModel
+from .serializers import ClassSerializer, AttendanceSerializer, StudentSerializer, MarkAttendanceSerializer
 import base64
 from io import BytesIO
 from PIL import Image
@@ -10,16 +11,17 @@ import numpy as np
 import face_recognition
 import chromadb
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
 
 # ChromaDB setup
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_or_create_collection(name="face_vector")
 
 class ClassViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Class.objects.all()
+    queryset = ClassModel.objects.all()
     serializer_class = ClassSerializer
 
-class AttendanceViewSet(viewsets.ReadOnlyModelViewSet):
+class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
 
@@ -119,3 +121,45 @@ class FaceRecognitionViewSet(viewsets.ViewSet):
             })
 
         return Response({"count": len(out), "entries": out}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], url_path='mark-attendance')
+    @csrf_exempt  # Disable CSRF for this action
+    def mark_attendance(self, request):
+        """
+        Expects JSON: {
+           "student_id": "...",
+           "class_id": 1,
+           "week": 1,
+           "session": 1,
+           "status": "present",
+           "timestamp": "2025-06-10T19:00:00"
+        }
+        """
+        serializer = MarkAttendanceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cd = serializer.validated_data
+
+        student    = get_object_or_404(Student, studentId=cd['student_id'])
+        class_room = get_object_or_404(ClassModel, id=cd['class_id'])
+
+        att, created = Attendance.objects.get_or_create(
+            student     = student,
+            class_room  = class_room,
+            week        = cd['week'],
+            session     = cd['session'],
+            defaults    = {
+                'status':    cd['status'],
+                'timestamp': cd['timestamp'],
+            }
+        )
+
+        if created:
+            return Response(
+                {"status":"success","message":"Attendance recorded"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status":"exists","message":"Attendance already recorded"},
+                status=status.HTTP_200_OK
+            )

@@ -35,3 +35,11 @@ class StudentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # save password in plain text for authentication
         return super().create(validated_data)
+
+class MarkAttendanceSerializer(serializers.Serializer):
+    student_id     = serializers.CharField()
+    class_id  = serializers.IntegerField()
+    week           = serializers.IntegerField()
+    session        = serializers.IntegerField()
+    status         = serializers.ChoiceField(choices=[a[0] for a in Attendance.STATUS_CHOICES])
+    timestamp      = serializers.DateTimeField(format='%I:%M %p')

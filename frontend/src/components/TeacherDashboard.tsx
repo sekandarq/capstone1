@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ClassData } from '../types';
 
 const MAX_WEEKS = 16;
+const PI_SERVER = 'http://192.168.35.235:8000';
 
 interface AttendanceRecord {
   student: {
@@ -126,14 +127,33 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onLogout }) => {
       <div className="flex-1 p-6 bg-slate-100 overflow-auto">
         <div className="flex justify-between mb-6">
           <button onClick={async () => {
-              const res = await fetch('http://192.168.35.235:8000/start-face-recognition/', {
-                method: 'POST'
-              });
-              const data = await res.json();
-              alert(data.message);
+            // compute week/session based on selectedTab
+            const week = Math.ceil((selectedTab + 1) / 2);
+            const session = (selectedTab % 2) + 1;
+            
+            const payload = {
+              class_id: selectedClass.id,
+              week,
+              session,
+            };
+              try {
+                const res = await fetch(
+                  `${PI_SERVER}/start-face-recognition/`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                  }
+                );
+                const data = await res.json();
+                alert(data.message);
+              } catch (e) {
+                console.error(e);
+                alert('Failed to start recognition');
+              }
             }}
             className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-md"
-            >
+          >
             Start Face Recognition
           </button>
 
