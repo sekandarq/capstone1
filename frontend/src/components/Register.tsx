@@ -9,7 +9,7 @@ interface ClassItem {
 
 const Register: React.FC = () => {
   const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
@@ -22,8 +22,7 @@ const Register: React.FC = () => {
       .then(res => res.json())
       .then((data: ClassItem[]) => {
         setClasses(data);
-        if (data.length) setSelectedClassId(String(data[0].id));
-      })
+            })
       .catch(console.error);
   }, []);
 
@@ -32,7 +31,8 @@ const Register: React.FC = () => {
     fetch('/api/students/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, studentId, department, email, password, class_enrolled: selectedClassId })
+      body: JSON.stringify({ name, studentId, department, email, password, compiler: selectedClassIds.includes('compiler'),
+  operating_system: selectedClassIds.includes('operating_system') })
     })
       .then(res => {
         if (!res.ok) throw new Error('Registration failed');
@@ -51,18 +51,31 @@ const Register: React.FC = () => {
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white shadow p-6 rounded-lg">
         <div className="mb-4">
           <label htmlFor="class" className="block text-gray-700 font-bold mb-2">Class:</label>
-          <select
-            id="class"
-            value={selectedClassId}
-            onChange={e => setSelectedClassId(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          >
-            {classes.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col space-y-2">
+          {classes.map(c => (
+            <label key={c.id} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                value={c.name.toLowerCase().replace(/\s+/g, '_')}
+                onChange={e => {
+                    const { checked, value } = e.target;
+                    setSelectedClassIds(prev => {
+                      const updated = new Set(prev);
+                      if (checked) {
+                        updated.add(value);
+                      } else {
+                        updated.delete(value);
+                      }
+                      return Array.from(updated);
+                    });
+                  }}
+
+              />
+              <span className="ml-2">{c.name}</span>
+            </label>
+          ))}
+</div>
+
         </div>
         <div className="mb-4">
           <label htmlFor="name" className="block text-gray-700 font-bold mb-2">Name:</label>

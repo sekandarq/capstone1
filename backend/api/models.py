@@ -12,8 +12,8 @@ class Student(models.Model):
     studentId = models.CharField(max_length=50)
     department = models.CharField(max_length=100)
     password = models.CharField(max_length=128, null=True, blank=True)
-    class_enrolled = models.ForeignKey(Class, related_name='students', on_delete=models.CASCADE)
-
+    compiler = models.BooleanField(default=False)
+    operating_system = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.name} ({self.studentId})"
 
