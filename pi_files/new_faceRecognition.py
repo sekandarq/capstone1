@@ -146,28 +146,31 @@ def process_frame(frame, frame_count):
     
     face_ids = []
     face_names = []
-    for face_encoding in face_encodings:
-        matches = collection.query(
-              query_embeddings=[face_encoding.tolist()],
-              n_results=1
-            )
-        # distances, ids, metadatas all come back as lists-of-lists
-        if matches["distances"] and matches["distances"][0][0] < 0.5:
-            sid   = matches["ids"][0][0]               # student_id
-            sname = matches["metadatas"][0][0].get("name", "Unknown")
-            face_ids.append(sid)
-            face_names.append(sname)
 
     blink_count, pitch, yaw = detect_blink_and_head_movement(rgb_resized)
-    
-    spoofing_flags.clear()
-    for name in face_names:
-        if name == "Unknown":
-            spoofing_flags.append("unknown")
-        elif (time.time() - last_blink_time > SPOOF_TIMEOUT) or (abs(yaw) < YAW_THRESHOLD and abs(pitch) < PITCH_THRESHOLD):
-            spoofing_flags.append("spoofing")
-        else:
-            spoofing_flags.append("real")
+
+    for encoding in face_encodings:
+        status = "real"
+        if (time.time() - last_blink_time > SPOOF_TIMEOUT) or (abs(yaw) < YAW_THRESHOLD and abs(pitch) < PITCH_THRESHOLD):
+            status = "spoofing"
+
+        if status != "real":
+            spoofing_flags.append(status)
+            face_names.append("Spoofing")
+            continue
+
+    # Only now do recognition
+    matches = collection.query(query_embeddings=[encoding.tolist()], n_results=1)
+    if matches["distances"] and matches["distances"][0][0] < 0.5:
+        sid = matches["ids"][0][0]
+        name = matches["metadatas"][0][0].get("name", "Unknown")
+        face_ids.append(sid)
+        face_names.append(name)
+        spoofing_flags.append("real")
+    else:
+        face_names.append("Unknown")
+        spoofing_flags.append("unknown")
+
             
     for sid, name, status in zip(face_ids, face_names, spoofing_flags):
         
