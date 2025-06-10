@@ -8,8 +8,8 @@ class ClassAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('email', 'name', 'studentId', 'department', 'class_enrolled')
-    list_filter = ('department', 'class_enrolled')
+    list_display = ('id', 'name', 'studentId', 'email', 'compiler', 'operating_system')
+    list_filter = ('department', 'compiler', 'operating_system')
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):

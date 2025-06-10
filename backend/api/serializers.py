@@ -16,13 +16,20 @@ class AttendanceSerializer(serializers.ModelSerializer):
         fields = ['student', 'status', 'timestamp']
 
 class ClassSerializer(serializers.ModelSerializer):
-    students = StudentNestedSerializer(many=True)
+    students = serializers.SerializerMethodField()
 
     class Meta:
         model = Class
         fields = ['id', 'name', 'students']
 
-from django.contrib.auth.hashers import make_password
+    def get_students(self, obj):
+        if obj.name.lower() == 'compiler':
+            students = Student.objects.filter(compiler=True)
+        elif obj.name.lower() == 'operating system':
+            students = Student.objects.filter(operating_system=True)
+        else:
+            students = Student.objects.none()
+        return StudentNestedSerializer(students, many=True).data
 
 class StudentSerializer(serializers.ModelSerializer):
     # include password write-only for registration
@@ -30,7 +37,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'name', 'studentId', 'department', 'email', 'password', 'class_enrolled']
+        fields = ['id', 'name', 'studentId', 'department', 'email', 'password', 'compiler', 'operating_system']
 
     def create(self, validated_data):
         # save password in plain text for authentication

@@ -9,7 +9,9 @@ export interface Student {
   email: string;
   password?: string;
   attendanceStatus?: string;
-  classId?: number;
+
+  compiler?: boolean;
+  operating_system?: boolean;
 }
 
 // Represents a class with its roster of students

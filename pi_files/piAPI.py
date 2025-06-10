@@ -64,7 +64,7 @@ async def register_face(data: FaceRegisterRequest):
 @app.post("/start-face-recognition/")
 def start_recognition():
     try:
-        subprocess.Popen(["python3", "face_recognition_script.py"])
+        subprocess.Popen(["python3", "new_faceRecognition.py"])
         return {"status": "success", "message": "Face recognition started"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
