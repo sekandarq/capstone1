@@ -159,17 +159,17 @@ def process_frame(frame, frame_count):
             face_names.append("Spoofing")
             continue
 
-    # Only now do recognition
-    matches = collection.query(query_embeddings=[encoding.tolist()], n_results=1)
-    if matches["distances"] and matches["distances"][0][0] < 0.5:
-        sid = matches["ids"][0][0]
-        name = matches["metadatas"][0][0].get("name", "Unknown")
-        face_ids.append(sid)
-        face_names.append(name)
-        spoofing_flags.append("real")
-    else:
-        face_names.append("Unknown")
-        spoofing_flags.append("unknown")
+        # Only now do recognition
+        matches = collection.query(query_embeddings=[encoding.tolist()], n_results=1)
+        if matches["distances"] and matches["distances"][0][0] < 0.5:
+            sid = matches["ids"][0][0]
+            name = matches["metadatas"][0][0].get("name", "Unknown")
+            face_ids.append(sid)
+            face_names.append(name)
+            spoofing_flags.append("real")
+        else:
+            face_names.append("Unknown")
+            spoofing_flags.append("unknown")
 
             
     for sid, name, status in zip(face_ids, face_names, spoofing_flags):
