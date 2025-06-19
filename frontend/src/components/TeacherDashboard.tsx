@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ClassData } from '../types';
+import { PI_SERVER } from '../App';
 
 const MAX_WEEKS = 16;
-const PI_SERVER = 'http://192.168.35.235:8000';
 
 interface AttendanceRecord {
   student: {
@@ -24,9 +24,11 @@ interface TeacherDashboardProps {
 
 const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onLogout }) => {
   const [classes, setClasses] = useState<ClassData[]>([]);
+  const savedClassId = Number(localStorage.getItem('teacher.classId') ?? '');
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
   const [attendances, setAttendances] = useState<AttendanceRecord[]>([]);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const savedTab = Number(localStorage.getItem('teacher.tab') ?? '0')
+  const [selectedTab, setSelectedTab] = useState(savedTab);
   const [roster, setRoster] = useState<ClassData['students']>([]);
   const navigate = useNavigate();
 
@@ -37,8 +39,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onLogout }) => {
       .then((data: ClassData[]) => {
         setClasses(data);
         if (data.length) {
-          setSelectedClass(data[0]);
-          setRoster(data[0].students);
+          const found = data.find(c => c.id === savedClassId);
+          const initial = found ?? data[0];
+          setSelectedClass(initial);
+          setRoster(initial.students);
         }
       })
       .catch(console.error);
@@ -77,7 +81,22 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onLogout }) => {
   const handleLogout = () => {
     onLogout();
     navigate('/');
+    localStorage.removeItem('teacher.classId');
+    localStorage.removeItem('teacher.tab');
   };
+
+    // whenever teacher picks a different class, save its ID
+  useEffect(() => {
+    if (selectedClass) {
+      localStorage.setItem('teacher.classId', String(selectedClass.id));
+    }
+  }, [selectedClass]);
+
+  // whenever the tab changes, save that index
+  useEffect(() => {
+    localStorage.setItem('teacher.tab', String(selectedTab));
+  }, [selectedTab]);
+
 
   if (!selectedClass) {
     return <div>Loading classes…</div>;

@@ -19,6 +19,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const teacherAccount = { email: 'seonyeong@khu.ac.kr', password: 'password' };
     if (email === teacherAccount.email && password === teacherAccount.password) {
       onLogin('teacher');
+      localStorage.setItem('role', 'teacher');
       navigate('/teacher');
       return;
     }
@@ -29,6 +30,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const students: Student[] = await res.json();
       const registered = (students.length > 0 ? students[0] : null);
       if (registered) {
+        localStorage.setItem('role', 'student');
         localStorage.setItem('currentStudent', JSON.stringify(registered));
         onLogin('student');
         navigate('/student');

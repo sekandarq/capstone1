@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Student } from '../types';
+import { PI_SERVER } from '../App';
 
 interface StudentDashboardProps {
   onLogout: () => void;
@@ -125,8 +126,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onLogout }) => {
           return;
         }
 
-        const PI_API_BASE_URL = "http://192.168.35.235:8000";  // FastAPI running port
-        const res = await fetch(`${PI_API_BASE_URL}/register`, {
+        const res = await fetch(`${PI_SERVER}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

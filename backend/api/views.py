@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from .models import Student, Attendance, Class as ClassModel
 from .serializers import ClassSerializer, AttendanceSerializer, StudentSerializer, MarkAttendanceSerializer
 import base64
@@ -12,6 +13,8 @@ import face_recognition
 import chromadb
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
+from .auth import CsrfExemptSessionAuthentication
+
 
 # ChromaDB setup
 client = chromadb.PersistentClient(path="./chroma_db")
@@ -39,8 +42,14 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         return qs
 
 class StudentViewSet(viewsets.ModelViewSet):
+    # Disable CSRF for this viewset
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    # Allow any user to access this viewset
+    permission_classes = [AllowAny]
+
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+
 
     def get_queryset(self):
         qs = super().get_queryset()

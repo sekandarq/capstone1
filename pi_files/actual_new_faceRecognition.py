@@ -33,7 +33,7 @@ data = collection.get(include=["embeddings", "metadatas"]) # get the data neeede
 known_face_encodings = data["embeddings"]
 known_face_names = [meta.get("name", "Unknown") for meta in data["metadatas"]]
 
-DJANGO_HOST = "http://192.168.35.166:8000/api" #laptop's IP
+DJANGO_HOST = "http://192.168.35.67:8000/api" #laptop's IP
 
 attendance_marked = set()  # Set to track marked students
 
@@ -68,6 +68,8 @@ face_names = []
 frame_count = 0
 start_time = time.time()
 fps = 0
+has_blinked_once = False
+
 
 def euclidean(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
@@ -116,8 +118,10 @@ def get_head_pose(landmarks_2d, w, h):
 def detect_blink_and_head_movement(frame_rgb):
     global blink_total, last_blink_time
     results = face_mesh.process(frame_rgb)
+    
     if not results.multi_face_landmarks:
         return blink_total, 0, 0
+    
     face_landmarks = results.multi_face_landmarks[0]
     h, w, _ = frame_rgb.shape
     landmarks_2d = [(int(pt.x * w), int(pt.y * h)) for pt in face_landmarks.landmark]
@@ -129,6 +133,8 @@ def detect_blink_and_head_movement(frame_rgb):
     if avg_EAR < EAR_THRESHOLD:
         blink_total += 1
         last_blink_time = time.time()
+        global has_blinked_once
+        has_blinked_once = True
 
     pitch, yaw, _ = get_head_pose(landmarks_2d, w, h)
     return blink_total, pitch, yaw
@@ -143,33 +149,28 @@ def process_frame(frame, frame_count):
         face_locations[:] = face_recognition.face_locations(rgb_resized)
         face_encodings[:] = face_recognition.face_encodings(rgb_resized, face_locations, model='small')
         face_names[:] = []
-    
     face_ids = []
     face_names = []
-
-    blink_count, pitch, yaw = detect_blink_and_head_movement(rgb_resized)
-
+    
     for encoding in face_encodings:
-        status = "real"
-        if (time.time() - last_blink_time > SPOOF_TIMEOUT) or (abs(yaw) < YAW_THRESHOLD and abs(pitch) < PITCH_THRESHOLD):
-            status = "spoofing"
-
-        if status != "real":
-            spoofing_flags.append(status)
-            face_names.append("Spoofing")
-            continue
-
-        # Only now do recognition
         matches = collection.query(query_embeddings=[encoding.tolist()], n_results=1)
         if matches["distances"] and matches["distances"][0][0] < 0.5:
             sid = matches["ids"][0][0]
             name = matches["metadatas"][0][0].get("name", "Unknown")
             face_ids.append(sid)
             face_names.append(name)
+            #spoofing_flags.append("real") 
+            
+    blink_count, pitch, yaw = detect_blink_and_head_movement(rgb_resized)
+    
+        #  Anti-spoofing check
+    for name in face_names:
+        if name == "Unknown":
+            spoofing_flags.append("unknown")
+        elif has_blinked_once and (abs(yaw) >= YAW_THRESHOLD or abs(pitch) >= PITCH_THRESHOLD):
             spoofing_flags.append("real")
         else:
-            face_names.append("Unknown")
-            spoofing_flags.append("unknown")
+            spoofing_flags.append("spoofing")
 
             
     for sid, name, status in zip(face_ids, face_names, spoofing_flags):
@@ -213,8 +214,20 @@ def draw_results(frame):
         right *= cv_scaler
         bottom *= cv_scaler
         left *= cv_scaler
-        box_color = (0, 255, 0) if status == "real" else (0, 255, 255) if status == "spoofing" else (0, 0, 255)
-        label = name if status == "real" else f"{name}: {status}"
+        
+        if status == "unknown":
+            box_color = (0, 0, 255)
+            label = "Unknown"
+        elif status == "spoofing":
+            box_color = (0, 255, 255)  # Yellow
+            label = f"{name}: Spoofing"
+        else:
+            box_color = (0, 255, 0)    # Green
+            label = name
+            
+        #box_color = (0, 255, 0)if status == "real" else (0, 255, 255) if status == "spoofing" else (0, 0, 255)
+        #label = name if status == "real" else f"{name}: {status}"
+        
         cv2.rectangle(frame, (left, top), (right, bottom), box_color, 3)
         cv2.rectangle(frame, (left -3, top - 35), (right+3, top), box_color, cv2.FILLED)
         cv2.putText(frame, label, (left + 6, top - 6), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 0), 1)
@@ -239,6 +252,7 @@ while True:
     cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     cv2.imshow('Video', display_frame)
+    cv2.moveWindow('Video', 100, 90)
     if cv2.waitKey(1) == ord("q"):
         break
 

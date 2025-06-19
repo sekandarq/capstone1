@@ -69,7 +69,7 @@ async def register_face(data: FaceRegisterRequest):
 @app.post("/start-face-recognition/")
 def start_recognition(payload: StartRecognitionPayload):
     try:
-        subprocess.Popen(["python3", "/home/capstone-design/Desktop/Face Recognition/new_faceRecognition.py", str(payload.class_id), str(payload.week), str(payload.session)], cwd="/home/capstone-design/Desktop/Face Recognition")
+        subprocess.Popen(["python3", "/home/capstone-design/Desktop/Face Recognition/actual_new_faceRecognition.py", str(payload.class_id), str(payload.week), str(payload.session)], cwd="/home/capstone-design/Desktop/Face Recognition")
         print("[INFO] Spawned new_faceRecognition.py")
         return {"status": "success", "message": f"Started recognition for class {payload.class_id}, week {payload.week}, session {payload.session}"}
     except Exception as e:
